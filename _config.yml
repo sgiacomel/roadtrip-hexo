@@ -82,7 +82,7 @@ theme: tranquilpeak
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
   type: git
-  repo: git@github.com:sgiacomel/public.git
+  repo: git@github.com:sgiacomel/roadtrip.git
   branch: master
   message: "Site updated: {{ now('YYYY-MM-DD HH:mm:ss') }}"
 
