@@ -1,0 +1,675 @@
+<div id="container-fluid">
+	<div id="map"></div>
+</div>
+<%- js('assets/js/async.min.js') %>
+<%- js('assets/js/jquery.js') %>
+<%- css('assets/css/map.css') %>
+<script>
+
+var url_string = window.location.href;
+var url = new URL(url_string);
+var dates = [];
+if (url.searchParams.get("dates")) {
+	url.searchParams.get("dates").split("|").forEach(function(date){
+		if (date) {
+			var date = new Date(Date.parse(date));
+			dates.push(date);
+		}
+	});
+}
+if (url.searchParams.get("alldates") !== null || dates.length === 0) {
+	raw_dates = ["2018/03/17", "2018/03/29", "2018/03/30", "2018/03/31", "2018/04/01", "2018/04/07"];
+	raw_dates.forEach(function(date) {
+		dates.push(new Date(Date.parse(date)));
+	});
+}
+var embed;
+if (url.searchParams.get("embed") !== null) {
+	embed = true;
+	$( "#header" ).hide();
+	$( "#container-fluid" ).css({ top: '0px', height: '100%' });
+}
+dates.sort();
+//var date = url.searchParams.get("date") ? new Date(Date.parse(url.searchParams.get("date"))) : new Date();
+//var date_string = date.toISOString().split('T')[0].split('-').join('');
+
+var small_size;
+var big_size;
+
+var _toRadian = function (degree) {
+  return degree * Math.PI / 180;
+};
+
+function getArrayCoordinates(points) {
+  var array = [];
+  for (var i in points) {
+  	array.push([points[i].lat(), points[i].lng()]);
+  }
+  return array;
+}
+
+function getDistance(array, decimals) {
+  decimals = decimals || 3;
+  var earthRadius = 6378.137, // km
+    distance = 0,
+    len = array.length,
+    i,
+    x1,
+    x2,
+    lat1,
+    lat2,
+    lon1,
+    lon2,
+    dLat,
+    dLon,
+    a,
+    c,
+    d;
+  for (i = 0; (i + 1) < len; i++) {
+    x1 = array[i];
+    x2 = array[i + 1];
+
+    lat1 = parseFloat(x1[0]);
+    lat2 = parseFloat(x2[0]);
+    lon1 = parseFloat(x1[1]);
+    lon2 = parseFloat(x2[1]);
+
+    dLat = _toRadian(lat2 - lat1);
+    dLon = _toRadian(lon2 - lon1);
+    lat1 = _toRadian(lat1);
+    lat2 = _toRadian(lat2);
+
+    a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+    c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    d = earthRadius * c;
+    distance += d;
+  }
+  distance = Math.round(distance * Math.pow(10, decimals)) / Math.pow(10, decimals);
+  return distance;
+}
+
+function processPoints(geometry, callback, thisArg) {
+	if (geometry instanceof google.maps.LatLng) {
+		callback.call(thisArg, geometry);
+	} else if (geometry instanceof google.maps.Data.Point) {
+		callback.call(thisArg, geometry.get());
+	} else {
+		geometry.getArray().forEach(function(g) {
+			processPoints(g, callback, thisArg);
+		});
+	}
+}
+
+function loadJSON(file, callback) {
+	var xobj = new XMLHttpRequest();
+	xobj.overrideMimeType("application/json");
+	xobj.open('GET', file, true);
+	xobj.onreadystatechange = function() {
+		if (xobj.readyState === 4 && xobj.status === 200) {
+		  callback(xobj.responseText);
+		}
+	}
+	xobj.send(null);
+}
+
+var stroke_red = 0x00;
+var stroke_green = 0x80;
+var stroke_blue = 0x00;
+var color_index = embed ? dates[0].getDate() * 2 : 1;
+var line_index = 0;
+var segments = {};
+var infowindows = {};
+var default_stroke_weight = 4;
+var selected_stroke_weight = 8;
+
+function getNewLine() {
+	color_index++;
+	current_color = makeColorGradient(2.4,2.4,2.4,0,2,4,color_index);
+	return {
+		"type": "Feature",
+		"properties": {
+			"strokeColor": current_color,
+			"index": line_index++,
+			"strokeWeight": default_stroke_weight,
+			"zIndex": 0
+		},
+		"geometry":{
+			"type": "LineString",
+			"coordinates": []
+		}
+	}
+}
+
+function makeColorGradient(frequency1, frequency2, frequency3,
+                             phase1, phase2, phase3, i) {
+  var center = 128;
+  var width = 127;
+  var red = Math.sin(frequency1 * i + phase1) * width + center;
+  var grn = Math.sin(frequency2 * i + phase2) * width + center;
+  var blu = Math.sin(frequency3 * i + phase3) * width + center;
+  return RGB2Color(red,grn,blu);
+}
+
+function RGB2Color(r,g,b) {
+  return 'rgb(' + Math.round(r) + ',' + Math.round(g) + ',' + Math.round(b) + ')';
+}
+
+function getLocality(response) {
+	var response = JSON.parse(response);
+	var locality = "";
+	search_for = ["locality", "administrative_area_level_3"];
+	if (response.results && response.results[0]) {
+		for (var index_address in response.results[0].address_components) {
+			if(response.results[0].address_components[index_address].types.some(function (v) { return search_for.indexOf(v) >= 0;
+		    })) {
+				locality = response.results[0].address_components[index_address].short_name;
+				break;
+			}
+		}
+	}
+	return locality;
+}
+
+function distColor(s, t) {
+    if (!s.length || !t.length) return 0;
+    return distColor(s.slice(2), t.slice(2)) +
+        Math.abs(parseInt(s.slice(0, 2), 16) - parseInt(t.slice(0, 2), 16));
+}
+
+function closestColor(arr, str) {
+    var min = 0xffffff;
+    var best, current, i;
+    for (i = 0; i < arr.length; i++) {
+        current = distColor(arr[i], str)
+        if (current < min) {
+            min = current
+            best = arr[i];
+        }
+    }	
+    return colors[best];
+}
+
+function componentToHex(c) {
+    var hex = c.toString(16);
+    return hex.length == 1 ? "0" + hex : hex;
+}
+
+function rgbToHex(r, g, b) {
+    return componentToHex(r) + componentToHex(g) + componentToHex(b);
+}
+
+function invertColor(hex) {
+    if (hex.indexOf('#') === 0) {
+        hex = hex.slice(1);
+    }
+    // convert 3-digit hex to 6-digits.
+    if (hex.length === 3) {
+        hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    }
+    if (hex.length !== 6) {
+        throw new Error('Invalid HEX color.');
+    }
+    // invert color components
+    var r = (255 - parseInt(hex.slice(0, 2), 16)).toString(16),
+        g = (255 - parseInt(hex.slice(2, 4), 16)).toString(16),
+        b = (255 - parseInt(hex.slice(4, 6), 16)).toString(16);
+    // pad each with zeros and return
+    return padZero(r) + padZero(g) + padZero(b);
+}
+
+function padZero(str, len) {
+    len = len || 2;
+    var zeros = new Array(len).join('0');
+    return (zeros + str).slice(-len);
+}
+
+var colors = {
+    '800080': 'purple',
+    '0000ff': 'blue',
+    '008000': 'green',
+    'add8e6': 'lightblue',
+    'ffa500': 'orange',
+    'ffc0cb': 'pink',
+    'ff0000': 'red',
+    'ffff00': 'yellow'
+};
+
+// convert the `colors`-object to an array
+var colorsArr = [];
+for(var key in colors) {
+    colorsArr.push(key);
+}
+
+function addMarker(map, location, index, point) {
+	//var components = current_color.match(/\d+/g);
+	//var current_hex_color = rgbToHex(parseInt(components[0]), parseInt(components[1]), parseInt(components[2]));
+	//var invert_color = invertColor(current_hex_color);
+	//var icon_color = closestColor(colorsArr, invert_color);
+	//var icon_color = "orange";
+	var marker_index = (index + 1) * 2;
+	if (point == 'start') {
+		marker_index -= 1;
+	}
+	var image = {
+	  url: 'https://raw.githubusercontent.com/Concept211/Google-Maps-Markers/master/images/marker_orange' + marker_index + '.png',
+	  labelOrigin: new google.maps.Point(15, 40),
+	  size: small_size,
+	  scaledSize: small_size,
+	  zIndex: point == 'end' ? marker_index * 5 : 1
+	};
+	var marker = new google.maps.Marker({
+      position: location,
+      map: map,
+      icon: image,
+	  zIndex: point == 'end' ? marker_index * 5 : 1
+    });
+    marker.addListener('click', function(event) {
+	    handleEvent(null, index);
+	});
+    segments[index]["markers"] = segments[index]["markers"] || {};
+    segments[index]["markers"][point] = marker;
+}
+
+function generateSegment(feature, line, point) {
+	var mark_lat = feature.geometry.coordinates[1];
+	var mark_lng = feature.geometry.coordinates[0];
+	var index = line.properties.index;
+	loadJSON("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + mark_lat + ',' + mark_lng + "&key=AIzaSyCMETxi9mRjWMt726OBZAAhRyXj1xyuPOs", function(response) {
+		var locality_mark = getLocality(response);
+		feature.properties.start = locality_mark;
+		segments[index] = segments[index] || {}
+		segments[index][point] = locality_mark;
+		segments[index]["distance"] = segments[index]["distance"] || getDistance(line.geometry.coordinates, 2);
+		var distance = segments[index]["distance"];
+		if (point == "start") {
+			segments[index]["start_time"] = feature.properties.time;
+		}
+		if (point == "end") {
+			segments[index]["end_time"] = feature.properties.time;
+
+			var left_length = Math.ceil(line.geometry.coordinates.length / 2);
+			var left_side = line.geometry.coordinates.slice(0, left_length);
+			var left_distance = getDistance(left_side, 2);
+			
+			var step = 5;
+
+			if (Math.abs(left_distance / distance - 0.5) > 0.1)
+			{
+				if (left_distance > distance / 2) {
+					while(left_distance > distance / 2) {
+						left_length -= step;
+						left_side = line.geometry.coordinates.slice(0, left_length);
+						left_distance = getDistance(left_side, 2);
+					}
+				}
+				else {
+					while(left_distance < distance / 2) {
+						left_length += step;
+						left_side = line.geometry.coordinates.slice(0, left_length);
+						left_distance = getDistance(left_side, 2);
+					}
+				}
+			}
+
+			var midPoint = new google.maps.LatLng(
+				parseFloat(line.geometry.coordinates[left_length][1]), 
+				parseFloat(line.geometry.coordinates[left_length][0]));
+
+			infowindows[index] = new google.maps.InfoWindow({
+		  		position: midPoint
+      		});
+		}
+		
+		var latLng = new google.maps.LatLng(parseFloat(mark_lat), parseFloat(mark_lng));
+		addMarker(map, latLng, index, point);
+		//var start_point = new google.maps.LatLng(line.geometry.coordinates[0][1], line.geometry.coordinates[0][0]);
+		//var end_point = new google.maps.LatLng(line.geometry.coordinates[line.geometry.coordinates.length - 1][1], line.geometry.coordinates[line.geometry.coordinates.length - 1][0]);
+
+		/*var midPoint = new google.maps.LatLng( 
+		    (line.geometry.coordinates[0][1] + line.geometry.coordinates[line.geometry.coordinates.length - 1][1]) / 2, 
+		    (line.geometry.coordinates[0][0] + line.geometry.coordinates[line.geometry.coordinates.length - 1][0]) / 2); */
+	});
+
+}
+
+function setLabel(segment, point) {
+	segment.markers[point].setLabel({
+		text: segment[point],
+	    fontSize: "14px",
+	    fontWeight: "bold",
+  		fontFamily: "Montserrat, Georgia, Times, serif",
+  		color: "black"
+	});
+}
+
+function getTimeDifference(date_start, date_end) {
+	var delta = Math.abs(date_end - date_start) / 1000;
+	var hours = Math.floor(delta / 3600) % 24;
+	delta -= hours * 3600;
+	var minutes = Math.floor(delta / 60) % 60;
+	delta -= minutes * 60;
+	var seconds = delta % 60;
+	return (hours ? (hours + " hr and ") : '') + (minutes ? (minutes + " min") : '');
+}
+
+
+var map, center, zoom_level;
+
+function resetMapView() {
+	map.setZoom(zoom_level);
+	map.setCenter(center);
+	resetLines();
+	resetInfoWindows();
+	resetMarkers();
+}
+
+function resetMarkers(index_feature) {
+	var open_infowindow_index;
+	for (var index_infowindow in infowindows) {
+		var marker_index = (parseInt(index_infowindow) + 1) * 2;
+		if(index_infowindow == index_feature) {			
+			segments[index_infowindow].markers.start.setLabel({
+				text: segments[index_infowindow].start,
+			    fontSize: "14px",
+			    fontWeight: "bold",
+		  		fontFamily: "Montserrat, Georgia, Times, serif",
+		  		color: "black"
+			});
+			var end_icon = segments[index_infowindow].markers.end.getIcon();
+			end_icon.size = big_size;
+			end_icon.scaledSize = big_size;
+			end_icon.zIndex = 1000;
+			end_icon.url = 'https://raw.githubusercontent.com/Concept211/Google-Maps-Markers/master/images/marker_red' + marker_index + '.png';
+			segments[index_infowindow].markers.end.setIcon(end_icon);
+			segments[index_infowindow].markers.end.setZIndex(1000);
+			
+			var start_icon = segments[index_infowindow].markers.start.getIcon();
+			start_icon.size = big_size;
+			start_icon.scaledSize = big_size;
+			start_icon.zIndex = 1000;
+			start_icon.url = 'https://raw.githubusercontent.com/Concept211/Google-Maps-Markers/master/images/marker_red' + (marker_index - 1) + '.png';
+			segments[index_infowindow].markers.start.setIcon(start_icon);
+			segments[index_infowindow].markers.start.setZIndex(1000);
+
+			segments[index_infowindow].markers.end.setLabel({
+				text: segments[index_infowindow].end,
+			    fontSize: "14px",
+			    fontWeight: "bold",
+		  		fontFamily: "Montserrat, Georgia, Times, serif",
+		  		color: "black"
+			});
+		}
+		else {
+			segments[index_infowindow].markers.start.setLabel(null);
+			segments[index_infowindow].markers.end.setLabel(null);
+
+			var end_icon = segments[index_infowindow].markers.end.getIcon();
+			end_icon.size = small_size;
+			end_icon.scaledSize = small_size;
+			end_icon.zIndex = 5;
+			end_icon.url = 'https://raw.githubusercontent.com/Concept211/Google-Maps-Markers/master/images/marker_orange' + marker_index + '.png';
+			segments[index_infowindow].markers.end.setIcon(end_icon);
+			segments[index_infowindow].markers.end.setZIndex(5);
+			
+			var start_icon = segments[index_infowindow].markers.start.getIcon();
+			start_icon.size = small_size;
+			start_icon.scaledSize = small_size;
+			start_icon.zIndex = 1;
+			start_icon.url = 'https://raw.githubusercontent.com/Concept211/Google-Maps-Markers/master/images/marker_orange' + (marker_index - 1) + '.png';
+			segments[index_infowindow].markers.start.setIcon(start_icon);
+			segments[index_infowindow].markers.start.setZIndex(1);
+		}
+	}
+	return open_infowindow_index;
+}
+
+function resetInfoWindows(index_feature) {
+	var open_infowindow_index;
+	for (var index_infowindow in infowindows) {
+		var marker_index = (parseInt(index_infowindow) + 1) * 2;
+		if(index_infowindow == index_feature) {
+			infowindows[index_infowindow].setContent("" + 
+				segments[index_feature].start + " --> " + segments[index_feature].end + 
+				"<br>Distance: " + segments[index_feature].distance + " km" +
+				"<br>Start: " + new Date(Date.parse(segments[index_feature].start_time)) +
+				"<br>End: " + new Date(Date.parse(segments[index_feature].end_time)) + 
+				"<br>Duration: " + getTimeDifference(Date.parse(segments[index_feature].start_time), Date.parse(segments[index_feature].end_time))
+			);					
+			open_infowindow_index = index_feature;
+		}
+		else {
+			infowindows[index_infowindow].close(map);
+		}
+	}
+	return open_infowindow_index;
+}
+
+function resetLines(feature_input) {
+	map.data.forEach(function(feature) {
+	    if (feature == feature_input) {
+			feature.setProperty('strokeWeight', selected_stroke_weight);
+			feature.setProperty('zIndex', 2);
+		}
+		else {
+			feature.setProperty('strokeWeight', default_stroke_weight);
+			feature.setProperty('zIndex', 0);
+		}
+	});
+}
+
+function handleEvent(feature, index) {
+	var index_feature;
+	if (index !== undefined && index !== null) {
+		index_feature = index;
+		map.data.forEach(function(data_feature) {
+			if (data_feature.getProperty("index") == index) {
+				feature = data_feature;
+			}
+		});
+	}
+	else {
+		index_feature = feature.getProperty("index");
+	}
+	resetLines(feature);
+	resetMarkers(index_feature);
+	if (!embed) {
+		var bounds = new google.maps.LatLngBounds();
+		processPoints(feature.getGeometry(), bounds.extend, bounds);
+		map.fitBounds(bounds);
+		open_infowindow_index = resetInfoWindows(index_feature);
+		setTimeout(function() { infowindows[open_infowindow_index].open(map) }, 500);
+	}
+}
+
+function CenterControl(controlDiv, map) {
+
+	// Set CSS for the control border.
+	var controlUI = document.createElement('div');
+	controlUI.style.backgroundColor = '#fff';
+	controlUI.style.border = '2px solid #fff';
+	controlUI.style.borderRadius = '3px';
+	controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
+	controlUI.style.cursor = 'pointer';
+	controlUI.style.marginBottom = '22px';
+	controlUI.style.textAlign = 'center';
+	controlUI.title = 'Click to recenter the map';
+	controlDiv.appendChild(controlUI);
+
+	// Set CSS for the control interior.
+	var controlText = document.createElement('div');
+	controlText.style.color = 'rgb(25,25,25)';
+	controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
+	controlText.style.fontSize = '16px';
+	controlText.style.lineHeight = '38px';
+	controlText.style.paddingLeft = '5px';
+	controlText.style.paddingRight = '5px';
+	controlText.innerHTML = 'Center Map';
+	controlUI.appendChild(controlText);
+
+	// Setup the click event listeners
+	controlUI.addEventListener('click', function() {
+	  resetMapView();
+	});
+
+}
+
+function SegmentControl(controlDiv, feature, map, start, end) {
+	var index = feature.getProperty("index");
+	var text = start + " --> " + end;
+	// Set CSS for the control border.
+	var controlUI = document.createElement('div');
+	controlUI.style.border = '2px solid #fff';
+	controlUI.style.borderRadius = '3px';
+	controlUI.style.boxShadow = '0 2px 4px rgba(0,0,0,.3)';
+	controlUI.style.cursor = 'pointer';
+	controlUI.style.marginBottom = '0px';
+	controlUI.style.textAlign = 'left';
+	controlUI.title = text;
+	controlDiv.appendChild(controlUI);
+
+	// Set CSS for the control interior.
+	var controlText = document.createElement('div');
+	controlText.style.color = feature.getProperty("strokeColor");
+	controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
+	controlText.style.fontSize = '12px';
+	controlText.style.lineHeight = '20px';
+	controlText.style.paddingLeft = '2px';
+	controlText.style.paddingRight = '2px';
+	controlText.innerHTML = text;
+	controlUI.appendChild(controlText);
+
+	// Setup the click event listeners
+	controlUI.addEventListener('click', function() {
+	  	handleEvent(feature);
+	});
+
+}
+
+function initMap() {
+	map = new google.maps.Map(document.getElementById('map'), {
+		disableDefaultUI: true
+	});
+
+	if (embed) {
+		var mapType = new google.maps.StyledMapType(); 
+		map.mapTypes.set("Dummy Style", mapType); 
+		map.setMapTypeId("Dummy Style");
+	}
+
+	small_size = new google.maps.Size(17, 30);
+	big_size = new google.maps.Size(22, 40);
+
+	var bounds = new google.maps.LatLngBounds();
+	map.data.addListener('addfeature', function(e) {
+		processPoints(e.feature.getGeometry(), bounds.extend, bounds);
+		map.fitBounds(bounds);
+	});
+
+	map.data.setStyle(function(feature) {
+	  var strokeColor = feature.getProperty('strokeColor');
+	  return {
+	    strokeColor: strokeColor,
+	    strokeWeight: feature.getProperty('strokeWeight'),
+	    zIndex: feature.getProperty('zIndex')
+	  };
+	});
+
+	var timed_jsondata = {};
+	var global_jsondata = {
+		"type": "FeatureCollection",
+		"features": []
+	};
+
+	async.each(dates, function(date, callback) {
+		var date_string = date.toISOString().split('T')[0].split('-').join('')
+		loadJSON(<%- url_for('') %> + "map/gps/" + date_string + ".geojson", function(response) {
+			var jsondata = JSON.parse(response);
+			timed_jsondata[date_string] = [];
+			for (var feature_index in jsondata.features)
+			{
+				timed_jsondata[date_string].push(jsondata.features[feature_index]);
+			}
+			callback();
+		});
+	}, function(err) {
+	    Object.keys(timed_jsondata).sort().forEach(function(key, idx) {
+	    	global_jsondata.features.push.apply(global_jsondata.features, timed_jsondata[key]);
+		});
+		var line = getNewLine();
+		var features = [];
+		var time, old_time, time_difference;
+		for (var index in global_jsondata.features)
+		{
+			time = new Date(global_jsondata.features[index].properties.time).getTime();
+			time_difference = (time - old_time) / 1000;
+			if (time_difference > 600 || time_difference < 0) {
+				features.push(line);
+				generateSegment(global_jsondata.features[index - 1], line, "end");
+				line = getNewLine();
+				//features.push(global_jsondata.features[index - 1]);
+				//features.push(global_jsondata.features[index]);
+				generateSegment(global_jsondata.features[index], line, "start");
+			}
+			line.geometry.coordinates.push(global_jsondata.features[index].geometry.coordinates);
+			if (index == 0 || index == global_jsondata.features.length - 1) {
+				//features.push(global_jsondata.features[index]);
+				generateSegment(global_jsondata.features[index], line, index == 0 ? "start" : "end");
+			}
+			old_time = time;
+		}
+		features.push(line);
+		global_jsondata.features = features;
+		map.data.addGeoJson(global_jsondata);
+
+		map.data.addListener('click', function(event) {	
+		  if(event.feature.getGeometry().getType() == "LineString"){
+			  handleEvent(event.feature);
+			}
+		});
+	});
+
+	google.maps.event.addListenerOnce(map, 'idle', function(){
+		zoom_level = map.getZoom();
+		center = map.getCenter();
+
+		//map.data.forEach(function(feature) {
+		    /*$("#segment-list").html( $("#segment-list").html() + 
+		    	"<span>Segment " + feature.getProperty("index") + "</span>" +
+		    	'<input class="check-segment" id="check-segment-' + feature.getProperty("index") + '" type="checkbox" checked="true"><br>' 
+		    );*/
+		    /*var segmentControlDiv = document.createElement('div');
+		    var segmentControl = new SegmentControl(segmentControlDiv, feature, map, segments[feature.getProperty("index")].start, segments[feature.getProperty("index")].start);
+
+		    segmentControlDiv.index = 1;
+		    map.controls[google.maps.ControlPosition.LEFT_CENTER].push(segmentControlDiv);*/
+		//});
+
+		/*$( ".check-segment" ).change(function(event) {
+			var index = this.id.split('-')[this.id.split('-').length - 1];
+			var checked = this.checked;
+			map.data.forEach(function(feature) {
+			    if (feature.getProperty("index") == index) {
+			    	map.data.overrideStyle(feature, {
+					  visible: checked
+					});
+			   		segments[index].markers.start.setVisible(checked);
+			    	segments[index].markers.end.setVisible(checked);
+			    }
+			});
+		});*/
+	});
+
+	// Create the DIV to hold the control and call the CenterControl()
+    // constructor passing in this DIV.
+    var centerControlDiv = document.createElement('div');
+    var centerControl = new CenterControl(centerControlDiv, map);
+
+    centerControlDiv.index = 1;
+    if (!embed) {
+    	map.controls[google.maps.ControlPosition.TOP_CENTER].push(centerControlDiv);
+    }
+}
+
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCMETxi9mRjWMt726OBZAAhRyXj1xyuPOs&callback=initMap"></script>
