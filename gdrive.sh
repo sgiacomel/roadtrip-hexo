@@ -3,6 +3,8 @@ set -e
 #Get gdrive
 #gdrive about
 
+cat themes/tranquilpeak/layout/_map/alldates.ejs | jq -r '.raw_dates[]'
+
 #Get files in folder
 folder_id=$(gdrive-linux-x64 list --no-header -q "mimeType = 'application/vnd.google-apps.folder' and name contains 'GPSLogger'" | awk '{print $1}')
 #folder_id=1yhjEL1CPHBKKoVRc12B2Zksk8BKxEhsB

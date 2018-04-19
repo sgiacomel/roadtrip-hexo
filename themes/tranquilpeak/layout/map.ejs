@@ -8,7 +8,7 @@
 
 var url_string = window.location.href;
 var url = new URL(url_string);
-var dates = [];
+var dates = [], raw_dates;
 if (url.searchParams.get("dates")) {
 	url.searchParams.get("dates").split("|").forEach(function(date){
 		if (date) {
@@ -18,8 +18,8 @@ if (url.searchParams.get("dates")) {
 	});
 }
 if (url.searchParams.get("alldates") !== null || dates.length === 0) {
-	raw_dates = ["2018/03/17", "2018/03/29", "2018/03/30", "2018/03/31", "2018/04/01", "2018/04/07"];
-	//raw_dates = [];
+	const input_dates = <%- partial('_map/alldates') %>
+	raw_dates = input_dates.raw_dates;
 	raw_dates.forEach(function(date) {
 		dates.push(new Date(Date.parse(date)));
 	});
