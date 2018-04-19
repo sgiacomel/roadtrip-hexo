@@ -678,6 +678,13 @@ function initMap() {
     if (!embed) {
     	map.controls[google.maps.ControlPosition.TOP_CENTER].push(centerControlDiv);
     }
+
+    map.addListener('tilesloaded', function () { 
+    	var start = segments[0]['start'];
+    	var end = segments[Object.keys(segments).length - 1]['end'];
+    	var text = start + (start == end ? '' : (" to " + end));
+    	$("#container-fluid").append($("<span>", {id: "map-loaded", text: text})); 
+    });
 }
 
 </script>

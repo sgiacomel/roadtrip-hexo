@@ -32,7 +32,10 @@ while read -r line; do
   	gdrive download --path "${gps_folder}" "${gdrive_id}"
   	downloaded_files+=(${gdrive_file})
   	date=$(echo ${gdrive_file} | sed 's/\.geojson$//g')
-  	# Create post
+  	date_param=${date:0:4}/${date:4:2}/${date:6:2}
+  	# Create map
+  	echo "Creating map..."
+  	title=$(node create_map.js ${date_param})
   	#hexo new post $date
   fi
 done < <(gdrive list --no-header -q "'${folder_id}' in parents and name contains 'geojson'")

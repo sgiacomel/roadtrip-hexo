@@ -1,9 +1,16 @@
 const puppeteer = require('puppeteer');
-const date = "2018/04/01";
+const date = process.argv[2];
 (async () => {
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
-  await page.goto('http://localhost:4000/roadtrip/map/?embed=true&dates=' + date);
+  page.setDefaultNavigationTimeout(60000);
+  await page.goto('http://localhost:4000/map/?embed=true&dates=' + date);
+  await page.waitForSelector('#map-loaded');
+  const text = await page.evaluate(el => el.innerHTML, await page.$('#map-loaded'));
+  /*await page.$eval("#map-loaded", (element) => {
+  	console.log(element.innerHTML);
+  });*/
+  console.log(text);
   await page.screenshot({path: date.split('/').join('_') + '.jpg'});
   await browser.close();
 })();
