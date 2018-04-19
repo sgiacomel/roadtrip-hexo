@@ -191,4 +191,25 @@ blockquote {
         }
     }
 }
-    
+
+#map {
+  height: 100%;
+  width: 100%;
+  float: right;
+}
+
+#reset-view {
+  cursor: pointer;
+  border: 1px solid #555;
+}
+
+#container-fluid {
+  position: fixed;
+  top: 30px;
+  left: 0;
+  bottom: 0px;
+  right: 0;
+  width: 100%;
+  height: calc(100% - 30px);
+  overflow: hidden;
+}
