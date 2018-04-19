@@ -1,14 +1,12 @@
 <div id="container-fluid">
 	<div id="map"></div>
 </div>
-<%- js('assets/js/async.min.js') %>
 <%- js('assets/js/jquery.js') %>
-<%- css('assets/css/map.css') %>
 <script>
 
 var url_string = window.location.href;
 var url = new URL(url_string);
-var dates = [], raw_dates;
+var dates = [], raw_dates = [];
 if (url.searchParams.get("dates")) {
 	url.searchParams.get("dates").split("|").forEach(function(date){
 		if (date) {
@@ -553,7 +551,7 @@ function initMap() {
 		disableDefaultUI: true
 	};
 
-	if (raw_dates.length == 0) {
+	if (dates.length == 0) {
 		map_options.center = new google.maps.LatLng(45,-80);
 		map_options.zoom = 7;
 	}
@@ -629,7 +627,7 @@ function initMap() {
 		}
 		features.push(line);
 		global_jsondata.features = features;
-		if (raw_dates.length > 0) {
+		if (dates.length > 0) {
 			map.data.addGeoJson(global_jsondata);
 		}
 		
