@@ -19,6 +19,7 @@ if (url.searchParams.get("dates")) {
 }
 if (url.searchParams.get("alldates") !== null || dates.length === 0) {
 	raw_dates = ["2018/03/17", "2018/03/29", "2018/03/30", "2018/03/31", "2018/04/01", "2018/04/07"];
+	//raw_dates = [];
 	raw_dates.forEach(function(date) {
 		dates.push(new Date(Date.parse(date)));
 	});
@@ -547,9 +548,17 @@ function SegmentControl(controlDiv, feature, map, start, end) {
 }
 
 function initMap() {
-	map = new google.maps.Map(document.getElementById('map'), {
+	
+	const map_options = {
 		disableDefaultUI: true
-	});
+	};
+
+	if (raw_dates.length == 0) {
+		map_options.center = new google.maps.LatLng(45,-80);
+		map_options.zoom = 7;
+	}
+
+	map = new google.maps.Map(document.getElementById('map'), map_options);
 
 	if (embed) {
 		var mapType = new google.maps.StyledMapType(); 
@@ -583,7 +592,7 @@ function initMap() {
 
 	async.each(dates, function(date, callback) {
 		var date_string = date.toISOString().split('T')[0].split('-').join('')
-		loadJSON(<%- url_for('') %> + "map/gps/" + date_string + ".geojson", function(response) {
+		loadJSON("gps/" + date_string + ".geojson", function(response) {
 			var jsondata = JSON.parse(response);
 			timed_jsondata[date_string] = [];
 			for (var feature_index in jsondata.features)
@@ -620,8 +629,10 @@ function initMap() {
 		}
 		features.push(line);
 		global_jsondata.features = features;
-		map.data.addGeoJson(global_jsondata);
-
+		if (raw_dates.length > 0) {
+			map.data.addGeoJson(global_jsondata);
+		}
+		
 		map.data.addListener('click', function(event) {	
 		  if(event.feature.getGeometry().getType() == "LineString"){
 			  handleEvent(event.feature);
