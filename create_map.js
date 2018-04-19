@@ -7,10 +7,7 @@ const date = process.argv[2];
   await page.goto('http://localhost:4000/map/?embed=true&dates=' + date);
   await page.waitForSelector('#map-loaded');
   const text = await page.evaluate(el => el.innerHTML, await page.$('#map-loaded'));
-  /*await page.$eval("#map-loaded", (element) => {
-  	console.log(element.innerHTML);
-  });*/
   console.log(text);
-  await page.screenshot({path: date.split('/').join('_') + '.jpg'});
+  await page.screenshot({path: date.split('/').join('-') + '.jpg'});
   await browser.close();
 })();

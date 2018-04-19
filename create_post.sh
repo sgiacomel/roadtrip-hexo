@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -e
 
+echo "Start server ..."
+nohup hexo server &>/dev/null &
+sleep 15
+
 # Get gdrive
 #gdrive about
 
@@ -33,10 +37,28 @@ while read -r line; do
   	downloaded_files+=(${gdrive_file})
   	date=$(echo ${gdrive_file} | sed 's/\.geojson$//g')
   	date_param=${date:0:4}/${date:4:2}/${date:6:2}
+  	date_post=${date:0:4}-${date:4:2}-${date:6:2}
   	# Create map
   	echo "Creating map..."
   	title=$(node create_map.js ${date_param})
-  	#hexo new post $date
+  	hexo new post ${date}
+  	mv ${date_post}.jpg source/_posts/${date}/map.jpg
+cat > source/_posts/${date}.md << EOM
+---
+title: ${title}
+date: ${date_post} 00:00:00
+tags:
+thumbnail: map.jpg
+thumbnailImage: map.jpg
+link: map/?dates=${date_param}
+---
+${title}
+<!-- excerpt -->
+EOM
+	
+	hexo clean
+	hexo generate
+	nohup hexo server &>/dev/null &
   fi
 done < <(gdrive list --no-header -q "'${folder_id}' in parents and name contains 'geojson'")
 
