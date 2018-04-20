@@ -610,7 +610,7 @@ function initMap() {
 		{
 			time = new Date(global_jsondata.features[index].properties.time).getTime();
 			time_difference = (time - old_time) / 1000;
-			if (time_difference > 600 || time_difference < 0) {
+			if (time_difference > 3600 || time_difference < 0) {
 				features.push(line);
 				generateSegment(global_jsondata.features[index - 1], line, "end");
 				line = getNewLine();
