@@ -10,11 +10,16 @@ const images = [];
 const ratios = {};
 const max_pics_to_remove = 5;
 
-function simple_pictures_loop(pictures, fig) {
+function simple_pictures_loop(pictures, fig, no_break) {
 	let result = "";
-	pictures.forEach(function(picture) {
-    	result += "{% image fancybox fig-" + fig + " left nocaption group:" + folder.toLowerCase() + " " + picture + " %}";
-    });
+	for (let index in pictures) {
+    	const picture = pictures[index];
+    	let classes = "left";
+    	if (index == pictures.length - 1 && !no_break) {
+    		classes += " break"
+    	}
+    	result += "{% image fancybox fig-" + fig + " " + classes + " nocaption group:" + folder.toLowerCase() + " " + picture + " %}";
+    }
     return result;
 }
 
@@ -28,6 +33,12 @@ function shuffle_array(array) {
 function print_pictures(pictures, option) {
 	let result = "";
 	let fig = "";
+	let align_big = "left";
+	let no_break = false;
+	if (Math.random() < 0.5) {
+		align_big = "right break";
+		no_break = true;
+	}
 	switch(option) {
 	    case 1:
 	        result = simple_pictures_loop(pictures, 100);
@@ -36,7 +47,14 @@ function print_pictures(pictures, option) {
 	        result = simple_pictures_loop(pictures, 50);
 	        break;
 	    case 3:
-	        result = simple_pictures_loop(pictures, 33);
+	        if(Math.random() < 0.5) {
+		        result = simple_pictures_loop(pictures, 33);
+		    }
+		    else {
+			    // 2 + 1
+			    result += "{% image fancybox fig-66 " + align_big + " nocaption group:" + folder.toLowerCase() + " " + pictures[0] + " %}";
+		        result += simple_pictures_loop(pictures.splice(1), 33, no_break);
+		    }
 	        break;
 	    case 4:
 	        if(Math.random() < 0.5) {
@@ -44,27 +62,24 @@ function print_pictures(pictures, option) {
 		    }
 		    else {
 			    // 3 + 1
-			    let align_big = "left";
-		    	if(Math.random() < 0.5) {
-		    		align_big = "right";
-		    	}
-		        result += "{% image fancybox fig-75 " + align_big + " nocaption group:" + folder.toLowerCase() + " " + pictures[0] + " %}";
-		        result += simple_pictures_loop(pictures.splice(1), 25);
+			    result += "{% image fancybox fig-75 " + align_big + " nocaption group:" + folder.toLowerCase() + " " + pictures[0] + " %}";
+		        result += simple_pictures_loop(pictures.splice(1), 25, no_break);
 		    }
 	        break;
 	    case 5:
-	        if(Math.random() < 0.5) {
+	        if(Math.random() < 0.33) {
 		        fig = 20;
 		        result = simple_pictures_loop(pictures, fig);
 		    }
+		    else if(Math.random() < 0.66) {
+		    	// 4 + 1
+		    	result += "{% image fancybox fig-50 " + align_big + " nocaption group:" + folder.toLowerCase() + " " + pictures[0] + " %}";
+		        result += simple_pictures_loop(pictures.splice(1), 25, no_break);
+		    }
 		    else {
 		    	// 4 + 1
-		    	let align_big = "left";
-		    	if(Math.random() < 0.5) {
-		    		align_big = "right";
-		    	}
-				result += "{% image fancybox fig-50 " + align_big + " nocaption group:" + folder.toLowerCase() + " " + pictures[0] + " %}";
-		        result += simple_pictures_loop(pictures.splice(1), 25);
+		    	result += "{% image fancybox fig-80 " + align_big + " nocaption group:" + folder.toLowerCase() + " " + pictures[0] + " %}";
+		        result += simple_pictures_loop(pictures.splice(1), 20, no_break);
 		    }
 	        break;
 	    default:

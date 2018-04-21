@@ -6,18 +6,30 @@ const cloudinary_config = require( "../cloudinary_config.json" );
 
 cloudinary.config(cloudinary_config);
 
-const dir = '/home/simone/Pictures/Darwin/resized/';
+const folder = process.argv[2];
+if (!folder) {
+	console.log("No folder!");
+	process.exit();
+}
+const dir = '/home/simone/Pictures/' + folder + '/resized/';
 
 fs.readdir(dir, function(err, files) {
 	if (err) {
 		console.log(err);
 	}
 	let gallery_index = 0;
-	let gallery_name = 'Darwin';
+	let gallery_name = folder;
 	files.forEach(function(file) {
-		console.log("Uploading: " + dir + file);
 		cloudinary.v2.uploader.upload(dir + file, {public_id: gallery_name + '/' + gallery_index++}, function(error, result) { 
-			console.log(" - " + result.url);
+			if (error) {
+				console.log(error);
+			}
+			if (result && result.url) {
+				console.log(" - " + result.url);
+			}
+			else {
+				console.log(file + ": no result?");
+			}
 		});
 	});
 });
