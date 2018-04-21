@@ -22,7 +22,7 @@ fi
 for pic in ${FOLDER}/*; do
   if [[ -f ${pic} ]]; then
   	file_name=$(basename ${pic})
-  	convert ${pic} -verbose -resize "${SIZE}>" ${DESTINATION}/${file_name}
+  	convert ${pic} -verbose -quality 75 -resize "${SIZE}^" ${DESTINATION}/${file_name}
   fi
 done
 

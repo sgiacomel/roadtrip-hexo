@@ -44,7 +44,7 @@ while getopts ":h:gurf:" opt; do
 done
 
 if [[ ! -z ${resize} ]]; then
-	./resizer.sh -f ~/Pictures/${folder} -d ~/Pictures/${folder}/resized -s 1500
+	./resizer.sh -f ~/Pictures/${folder} -d ~/Pictures/${folder}/resized -s 800
 fi
 if [[ ! -z ${upload} ]]; then
 	node cloudinary_upload.js ${folder}
