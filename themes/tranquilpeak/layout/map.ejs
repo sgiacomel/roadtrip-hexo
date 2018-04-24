@@ -294,10 +294,20 @@ function generateSegment(feature, coordinates, line, point) {
 		segments[index]["distance"] = segments[index]["distance"] || getDistance(line.geometry.coordinates, 2);
 		var distance = segments[index]["distance"];
 		if (point == "start") {
-			segments[index]["start_time"] = feature.properties.time;
+			if (feature.properties.coordTimes) {
+				segments[index]["start_time"] = feature.properties.coordTimes[0];
+			}
+			else {
+				segments[index]["start_time"] = feature.properties.time;
+			}
 		}
 		if (point == "end") {
-			segments[index]["end_time"] = feature.properties.time;
+			if (feature.properties.coordTimes) {
+				segments[index]["end_time"] = feature.properties.coordTimes[feature.properties.coordTimes.length - 1];
+			}
+			else {
+				segments[index]["end_time"] = feature.properties.time;
+			}
 
 			var left_length = Math.ceil(line.geometry.coordinates.length / 2);
 			var left_side = coordinates.slice(0, left_length);
