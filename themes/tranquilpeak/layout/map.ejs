@@ -636,7 +636,9 @@ function initMap() {
 				timed_jsondata[date_string] = [];
 				for (var feature_index in jsondata.features)
 				{
-					timed_jsondata[date_string].push(jsondata.features[feature_index]);
+					//if(jsondata.features[feature_index].geometry.type == "Point") {
+						timed_jsondata[date_string].push(jsondata.features[feature_index]);
+					//}
 				}
 				callback();
 			});
@@ -646,10 +648,15 @@ function initMap() {
 			});
 			var line = getNewLine();
 			var features = [];
-			var time, old_time, time_difference;
+			var time, old_time, time_difference, last_source;
 			for (var index in global_jsondata.features)
 			{
 				if(global_jsondata.features[index].geometry.type == "LineString") {
+					if (last_source == 'Point') {
+						features.push(line);
+						generateSegment(global_jsondata.features[index - 1], global_jsondata.features[index - 1].geometry.coordinates, line, "end");
+						line = getNewLine();
+					}
 					for (let coord_index = 0; coord_index < global_jsondata.features[index].properties.coordTimes.length; coord_index++) {
 						time = new Date(global_jsondata.features[index].properties.coordTimes[coord_index]).getTime();
 						time_difference = (time - old_time) / 1000;
@@ -658,30 +665,34 @@ function initMap() {
 							generateSegment(global_jsondata.features[index], global_jsondata.features[index].geometry.coordinates[coord_index - 1], line, "end");
 							line = getNewLine();
 							generateSegment(global_jsondata.features[index], global_jsondata.features[index].geometry.coordinates[coord_index], line, "start");
+							last_source = global_jsondata.features[index].geometry.type;
 						}
 						line.geometry.coordinates.push(global_jsondata.features[index].geometry.coordinates[coord_index]);
 						if (coord_index == 0 || coord_index == global_jsondata.features[index].geometry.coordinates.length - 1) {
 							generateSegment(global_jsondata.features[index], global_jsondata.features[index].geometry.coordinates[coord_index], line, coord_index == 0 ? "start" : "end");
+							last_source = global_jsondata.features[index].geometry.type;
 						}
 						old_time = time;
 					}
+					old_time = null;
 				}
 				else {
 					time = new Date(global_jsondata.features[index].properties.time).getTime();
 					time_difference = (time - old_time) / 1000;
 					if (time_difference > 3600 || time_difference < -3600) {
-						//console.log(time_difference);
 						features.push(line);
 						generateSegment(global_jsondata.features[index - 1], global_jsondata.features[index - 1].geometry.coordinates, line, "end");
 						line = getNewLine();
 						//features.push(global_jsondata.features[index - 1]);
 						//features.push(global_jsondata.features[index]);
 						generateSegment(global_jsondata.features[index], global_jsondata.features[index].geometry.coordinates, line, "start");
+						last_source = global_jsondata.features[index].geometry.type;
 					}
 					line.geometry.coordinates.push(global_jsondata.features[index].geometry.coordinates);
 					if (index == 0 || index == global_jsondata.features.length - 1) {
 						//features.push(global_jsondata.features[index]);
 						generateSegment(global_jsondata.features[index], global_jsondata.features[index].geometry.coordinates, line, index == 0 ? "start" : "end");
+						last_source = global_jsondata.features[index].geometry.type;
 					}
 					old_time = time;
 				}
