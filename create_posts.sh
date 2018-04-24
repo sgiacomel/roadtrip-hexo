@@ -58,6 +58,12 @@ download_missing_files() {
 
 #new_files+=("20180421.geojson")
 
+cache_results() {
+  for file in ${new_files[@]}; do
+    node cache_locality.js ${gps_folder}/${file}
+  done
+}
+
 create_maps() {
   start_hexo_server
   for file in ${new_files[@]}; do
@@ -114,7 +120,8 @@ folder_id=1yhjEL1CPHBKKoVRc12B2Zksk8BKxEhsB
 read_local_files
 get_gdrive_files ${folder_id}
 download_missing_files
-#new_files=() && new_files+=("20180419.geojson")
+#new_files=() && new_files+=("20180330.geojson")
+cache_results
 create_maps
 create_posts
 create_alldates

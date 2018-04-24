@@ -34,6 +34,7 @@ dates.sort();
 
 var small_size;
 var big_size;
+var locations;
 
 var _toRadian = function (degree) {
   return degree * Math.PI / 180;
@@ -286,9 +287,30 @@ function generateSegment(feature, coordinates, line, point) {
 	var mark_lat = coordinates[1];
 	var mark_lng = coordinates[0];
 	var index = line.properties.index;
-	loadJSON("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + mark_lat + ',' + mark_lng + "&key=AIzaSyCMETxi9mRjWMt726OBZAAhRyXj1xyuPOs", function(response) {
-		var locality_mark = getLocality(response);
-		feature.properties.start = locality_mark;
+	var locality_mark;
+	var input = mark_lat + ',' + mark_lng;
+	async.waterfall([
+	    function(callback) {
+	        if(locations[input]) {
+				locality_mark = locations[input];
+			}
+			callback(null, locality_mark);
+	    },
+	    function(locality_mark, callback) {
+	        if(locality_mark) {
+	        	//console.log('found ' + locality_mark);
+	        	callback(null, locality_mark);
+	        }
+	        else {
+	        	loadJSON("https://maps.googleapis.com/maps/api/geocode/json?latlng=" +input + "&key=AIzaSyCMETxi9mRjWMt726OBZAAhRyXj1xyuPOs", function(response) {
+					locality_mark = getLocality(response);
+					//console.log('got ' + locality_mark);
+					callback(null, locality_mark);
+				});
+	        }
+	    }
+	], function (err, locality_mark) {
+	    feature.properties.start = locality_mark;
 		segments[index] = segments[index] || {}
 		segments[index][point] = locality_mark;
 		segments[index]["distance"] = segments[index]["distance"] || getDistance(line.geometry.coordinates, 2);
@@ -339,19 +361,14 @@ function generateSegment(feature, coordinates, line, point) {
 
 			infowindows[index] = new google.maps.InfoWindow({
 		  		position: midPoint
-      		});
+	  		});
 		}
 		
 		var latLng = new google.maps.LatLng(parseFloat(mark_lat), parseFloat(mark_lng));
 		addMarker(map, latLng, index, point);
 		//var start_point = new google.maps.LatLng(line.geometry.coordinates[0][1], line.geometry.coordinates[0][0]);
 		//var end_point = new google.maps.LatLng(line.geometry.coordinates[line.geometry.coordinates.length - 1][1], line.geometry.coordinates[line.geometry.coordinates.length - 1][0]);
-
-		/*var midPoint = new google.maps.LatLng( 
-		    (line.geometry.coordinates[0][1] + line.geometry.coordinates[line.geometry.coordinates.length - 1][1]) / 2, 
-		    (line.geometry.coordinates[0][0] + line.geometry.coordinates[line.geometry.coordinates.length - 1][0]) / 2); */
 	});
-
 }
 
 function setLabel(segment, point) {
@@ -610,85 +627,89 @@ function initMap() {
 		"features": []
 	};
 
-	async.each(dates, function(date, callback) {
-		var date_string = date.toISOString().split('T')[0].split('-').join('')
-		loadJSON("gps/" + date_string + ".geojson", function(response) {
-			var jsondata = JSON.parse(response);
-			timed_jsondata[date_string] = [];
-			for (var feature_index in jsondata.features)
+	loadJSON("/locations.json", function(locations_response) {
+		locations = JSON.parse(locations_response);
+		async.each(dates, function(date, callback) {
+			var date_string = date.toISOString().split('T')[0].split('-').join('');
+			loadJSON("gps/" + date_string + ".geojson", function(response) {
+				var jsondata = JSON.parse(response);
+				timed_jsondata[date_string] = [];
+				for (var feature_index in jsondata.features)
+				{
+					timed_jsondata[date_string].push(jsondata.features[feature_index]);
+				}
+				callback();
+			});
+		}, function(err) {
+		    Object.keys(timed_jsondata).sort().forEach(function(key, idx) {
+		    	global_jsondata.features.push.apply(global_jsondata.features, timed_jsondata[key]);
+			});
+			var line = getNewLine();
+			var features = [];
+			var time, old_time, time_difference;
+			for (var index in global_jsondata.features)
 			{
-				timed_jsondata[date_string].push(jsondata.features[feature_index]);
-			}
-			callback();
-		});
-	}, function(err) {
-	    Object.keys(timed_jsondata).sort().forEach(function(key, idx) {
-	    	global_jsondata.features.push.apply(global_jsondata.features, timed_jsondata[key]);
-		});
-		var line = getNewLine();
-		var features = [];
-		var time, old_time, time_difference;
-		for (var index in global_jsondata.features)
-		{
-			if(global_jsondata.features[index].geometry.type == "LineString") {
-				for (let coord_index = 0; coord_index < global_jsondata.features[index].properties.coordTimes.length; coord_index++) {
-					time = new Date(global_jsondata.features[index].properties.coordTimes[coord_index]).getTime();
-					time_difference = (time - old_time) / 1000;
-					if (coord_index > 0 && (time_difference > 3600 || time_difference < 0)) {
-						features.push(line);
-						generateSegment(global_jsondata.features[index], global_jsondata.features[index].geometry.coordinates[coord_index - 1], line, "end");
-						line = getNewLine();
-						generateSegment(global_jsondata.features[index], global_jsondata.features[index].geometry.coordinates[coord_index], line, "start");
+				if(global_jsondata.features[index].geometry.type == "LineString") {
+					for (let coord_index = 0; coord_index < global_jsondata.features[index].properties.coordTimes.length; coord_index++) {
+						time = new Date(global_jsondata.features[index].properties.coordTimes[coord_index]).getTime();
+						time_difference = (time - old_time) / 1000;
+						if (coord_index > 0 && (time_difference > 3600 || time_difference < -3600)) {
+							features.push(line);
+							generateSegment(global_jsondata.features[index], global_jsondata.features[index].geometry.coordinates[coord_index - 1], line, "end");
+							line = getNewLine();
+							generateSegment(global_jsondata.features[index], global_jsondata.features[index].geometry.coordinates[coord_index], line, "start");
+						}
+						line.geometry.coordinates.push(global_jsondata.features[index].geometry.coordinates[coord_index]);
+						if (coord_index == 0 || coord_index == global_jsondata.features[index].geometry.coordinates.length - 1) {
+							generateSegment(global_jsondata.features[index], global_jsondata.features[index].geometry.coordinates[coord_index], line, coord_index == 0 ? "start" : "end");
+						}
+						old_time = time;
 					}
-					line.geometry.coordinates.push(global_jsondata.features[index].geometry.coordinates[coord_index]);
-					if (coord_index == 0 || coord_index == global_jsondata.features[index].geometry.coordinates.length - 1) {
-						generateSegment(global_jsondata.features[index], global_jsondata.features[index].geometry.coordinates[coord_index], line, coord_index == 0 ? "start" : "end");
+				}
+				else {
+					time = new Date(global_jsondata.features[index].properties.time).getTime();
+					time_difference = (time - old_time) / 1000;
+					if (time_difference > 3600 || time_difference < -3600) {
+						//console.log(time_difference);
+						features.push(line);
+						generateSegment(global_jsondata.features[index - 1], global_jsondata.features[index - 1].geometry.coordinates, line, "end");
+						line = getNewLine();
+						//features.push(global_jsondata.features[index - 1]);
+						//features.push(global_jsondata.features[index]);
+						generateSegment(global_jsondata.features[index], global_jsondata.features[index].geometry.coordinates, line, "start");
+					}
+					line.geometry.coordinates.push(global_jsondata.features[index].geometry.coordinates);
+					if (index == 0 || index == global_jsondata.features.length - 1) {
+						//features.push(global_jsondata.features[index]);
+						generateSegment(global_jsondata.features[index], global_jsondata.features[index].geometry.coordinates, line, index == 0 ? "start" : "end");
 					}
 					old_time = time;
 				}
 			}
-			else {
-				time = new Date(global_jsondata.features[index].properties.time).getTime();
-				time_difference = (time - old_time) / 1000;
-				if (time_difference > 3600 || time_difference < 0) {
-					features.push(line);
-					generateSegment(global_jsondata.features[index - 1], global_jsondata.features[index - 1].geometry.coordinates, line, "end");
-					line = getNewLine();
-					//features.push(global_jsondata.features[index - 1]);
-					//features.push(global_jsondata.features[index]);
-					generateSegment(global_jsondata.features[index], global_jsondata.features[index].geometry.coordinates, line, "start");
-				}
-				line.geometry.coordinates.push(global_jsondata.features[index].geometry.coordinates);
-				if (index == 0 || index == global_jsondata.features.length - 1) {
-					//features.push(global_jsondata.features[index]);
-					generateSegment(global_jsondata.features[index], global_jsondata.features[index].geometry.coordinates, line, index == 0 ? "start" : "end");
-				}
-				old_time = time;
+			features.push(line);
+			global_jsondata.features = features;
+			if (dates.length > 0) {
+				map.data.addGeoJson(global_jsondata);
 			}
-		}
-		features.push(line);
-		global_jsondata.features = features;
-		if (dates.length > 0) {
-			map.data.addGeoJson(global_jsondata);
-		}
-		
-		map.data.addListener('click', function(event) {	
-		  if(event.feature.getGeometry().getType() == "LineString"){
-			  handleEvent(event.feature);
-			}
-		});
+			
+			map.data.addListener('click', function(event) {	
+			  if(event.feature.getGeometry().getType() == "LineString"){
+				  handleEvent(event.feature);
+				}
+			});
 
-		google.maps.event.addListenerOnce(map, 'idle', function(){
-			zoom_level = map.getZoom();
-			center = map.getCenter();
-		});
+			google.maps.event.addListenerOnce(map, 'idle', function(){
+				zoom_level = map.getZoom();
+				center = map.getCenter();
+			});
 
-		google.maps.event.addListenerOnce(map, 'tilesloaded', function () { 
-	    	var start = segments[0]['start'];
-	    	var end = segments[Object.keys(segments).length - 1]['end'];
-	    	var text = start + (start == end ? '' : (" to " + end));
-	    	$("#container-fluid").append($("<span>", {id: "map-loaded", text: text})); 
-	    });
+			google.maps.event.addListenerOnce(map, 'tilesloaded', function () { 
+		    	var start = segments[0]['start'];
+		    	var end = segments[Object.keys(segments).length - 1]['end'];
+		    	var text = start + (start == end ? '' : (" to " + end));
+		    	$("#container-fluid").append($("<span>", {id: "map-loaded", text: text})); 
+		    });
+		});
 	});
 
 	// Create the DIV to hold the control and call the CenterControl()
