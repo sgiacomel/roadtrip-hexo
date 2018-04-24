@@ -140,6 +140,18 @@ function getNewLine() {
 	}
 }
 
+function getNewLineFromStringLine(string_line) {
+	color_index++;
+	current_color = makeColorGradient(2.4,2.4,2.4,0,2,4,color_index);
+	string_line.properties = {
+		"strokeColor": current_color,
+		"index": line_index++,
+		"strokeWeight": default_stroke_weight,
+		"zIndex": 0
+	};
+	return string_line;
+}
+
 function makeColorGradient(frequency1, frequency2, frequency3,
                              phase1, phase2, phase3, i) {
   var center = 128;
@@ -270,9 +282,9 @@ function addMarker(map, location, index, point) {
     segments[index]["markers"][point] = marker;
 }
 
-function generateSegment(feature, line, point) {
-	var mark_lat = feature.geometry.coordinates[1];
-	var mark_lng = feature.geometry.coordinates[0];
+function generateSegment(feature, coordinates, line, point) {
+	var mark_lat = coordinates[1];
+	var mark_lng = coordinates[0];
 	var index = line.properties.index;
 	loadJSON("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + mark_lat + ',' + mark_lng + "&key=AIzaSyCMETxi9mRjWMt726OBZAAhRyXj1xyuPOs", function(response) {
 		var locality_mark = getLocality(response);
@@ -288,7 +300,7 @@ function generateSegment(feature, line, point) {
 			segments[index]["end_time"] = feature.properties.time;
 
 			var left_length = Math.ceil(line.geometry.coordinates.length / 2);
-			var left_side = line.geometry.coordinates.slice(0, left_length);
+			var left_side = coordinates.slice(0, left_length);
 			var left_distance = getDistance(left_side, 2);
 			
 			var step = 5;
@@ -608,22 +620,41 @@ function initMap() {
 		var time, old_time, time_difference;
 		for (var index in global_jsondata.features)
 		{
-			time = new Date(global_jsondata.features[index].properties.time).getTime();
-			time_difference = (time - old_time) / 1000;
-			if (time_difference > 3600 || time_difference < 0) {
-				features.push(line);
-				generateSegment(global_jsondata.features[index - 1], line, "end");
-				line = getNewLine();
-				//features.push(global_jsondata.features[index - 1]);
-				//features.push(global_jsondata.features[index]);
-				generateSegment(global_jsondata.features[index], line, "start");
+			if(global_jsondata.features[index].geometry.type == "LineString") {
+				for (let coord_index = 0; coord_index < global_jsondata.features[index].properties.coordTimes.length; coord_index++) {
+					time = new Date(global_jsondata.features[index].properties.coordTimes[coord_index]).getTime();
+					time_difference = (time - old_time) / 1000;
+					if (coord_index > 0 && (time_difference > 3600 || time_difference < 0)) {
+						features.push(line);
+						generateSegment(global_jsondata.features[index], global_jsondata.features[index].geometry.coordinates[coord_index - 1], line, "end");
+						line = getNewLine();
+						generateSegment(global_jsondata.features[index], global_jsondata.features[index].geometry.coordinates[coord_index], line, "start");
+					}
+					line.geometry.coordinates.push(global_jsondata.features[index].geometry.coordinates[coord_index]);
+					if (coord_index == 0 || coord_index == global_jsondata.features[index].geometry.coordinates.length - 1) {
+						generateSegment(global_jsondata.features[index], global_jsondata.features[index].geometry.coordinates[coord_index], line, coord_index == 0 ? "start" : "end");
+					}
+					old_time = time;
+				}
 			}
-			line.geometry.coordinates.push(global_jsondata.features[index].geometry.coordinates);
-			if (index == 0 || index == global_jsondata.features.length - 1) {
-				//features.push(global_jsondata.features[index]);
-				generateSegment(global_jsondata.features[index], line, index == 0 ? "start" : "end");
+			else {
+				time = new Date(global_jsondata.features[index].properties.time).getTime();
+				time_difference = (time - old_time) / 1000;
+				if (time_difference > 3600 || time_difference < 0) {
+					features.push(line);
+					generateSegment(global_jsondata.features[index - 1], global_jsondata.features[index - 1].geometry.coordinates, line, "end");
+					line = getNewLine();
+					//features.push(global_jsondata.features[index - 1]);
+					//features.push(global_jsondata.features[index]);
+					generateSegment(global_jsondata.features[index], global_jsondata.features[index].geometry.coordinates, line, "start");
+				}
+				line.geometry.coordinates.push(global_jsondata.features[index].geometry.coordinates);
+				if (index == 0 || index == global_jsondata.features.length - 1) {
+					//features.push(global_jsondata.features[index]);
+					generateSegment(global_jsondata.features[index], global_jsondata.features[index].geometry.coordinates, line, index == 0 ? "start" : "end");
+				}
+				old_time = time;
 			}
-			old_time = time;
 		}
 		features.push(line);
 		global_jsondata.features = features;

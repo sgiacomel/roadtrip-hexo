@@ -20,7 +20,6 @@ local_files=()
 new_files=()
 alldates=()
 gps_folder="source/map/gps"
-new_dates=0
 declare -A gdrive_files
 declare -A titles
 
@@ -51,12 +50,13 @@ get_gdrive_files() {
 download_missing_files() {
   for gfile in "${!gdrive_files[@]}"; do 
     if [[ ! "${local_files[@]}" =~ "${gfile}" ]]; then
-      new_dates=1
       gdrive download --path "${gps_folder}" "${gdrive_files[${gfile}]}"
       new_files+=(${gfile})
     fi
   done
 }
+
+#new_files+=("20180421.geojson")
 
 create_maps() {
   start_hexo_server
@@ -94,7 +94,7 @@ EOM
 }
 
 create_alldates() {
-  if [[ new_dates == 1 ]]; then
+  if [[ ${#new_files[@]} > 0 ]]; then
     alldates_json='{"raw_dates":['
     count=0
     for date in "${alldates[@]}"; do
@@ -106,7 +106,7 @@ create_alldates() {
     done
     alldates_json="${alldates_json}"']}'
     echo "${alldates_json}"
-    echo "${alldates_json}" > themes/tranquilpeak/layout/_map/alldates.ejs
+    echo "${alldates_json}" > themes/sgiacomel/layout/_map/alldates.ejs
   fi
 }
 

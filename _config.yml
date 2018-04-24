@@ -14,8 +14,8 @@ timezone:
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
 #url: http://sgiacomel.github.io/roadtrip
 #root: /roadtrip/
-#url: http://localhost:4000/
-url: http://www.sgiacomel.com/
+url: http://localhost:4000/
+#url: http://www.sgiacomel.com/
 root: /
 permalink: :year/:month/:day/:title/
 permalink_defaults:
@@ -76,7 +76,6 @@ pagination_dir: page
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
 #theme: landscape
-#theme: simone
 theme: tranquilpeak
 
 # Deployment
