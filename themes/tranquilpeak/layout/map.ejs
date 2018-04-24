@@ -715,6 +715,9 @@ function initMap() {
     	var end = segments[Object.keys(segments).length - 1]['end'];
     	var text = start + (start == end ? '' : (" to " + end));
     	$("#container-fluid").append($("<span>", {id: "map-loaded", text: text})); 
+
+    	zoom_level = map.getZoom();
+		center = map.getCenter();
     });
 }
 
