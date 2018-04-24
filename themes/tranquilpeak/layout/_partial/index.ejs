@@ -1,4 +1,5 @@
-<section class="postShorten-group main-content-wrap">
+<section class="main-content-wrap">
+    <section class="postShorten-group">
     <% page.posts.each(function(post) { %>
     <%
         var tableOfContents = null;
@@ -130,4 +131,7 @@
     <% } else if (theme.gitment.enable) { %>
         <%- partial('post/gitment') %>
     <% } %>
+    </section>
+    <section class="sideBarMap">TEST TEST TEST
+    </section>
 </section>

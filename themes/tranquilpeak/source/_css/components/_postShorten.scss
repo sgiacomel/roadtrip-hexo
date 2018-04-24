@@ -1,6 +1,11 @@
 // Group of `.postShorten`
 // Add margin and border bottom when `.postShorten` are in `.postShorten-group`
 .postShorten-group {
+    width: 70%;
+    float: left;
+    padding: 5px;
+    margin: 5px;
+    border: 1px solid #aaa;
     .postShorten {
         // Space between 2 shorten post
         margin-top:    15px;
@@ -156,4 +161,13 @@
             }
         }
     }
+}
+
+.sideBarMap {
+    width: 25%;
+    float: right;
+    padding: 5px;
+    margin: 5px;
+    border: 1px solid #aaa;
+    height: 100px;
 }

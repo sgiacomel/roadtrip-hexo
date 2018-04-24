@@ -20,7 +20,7 @@
                 <%- partial('_partial/sidebar', {sidebarBehavior: sidebarBehavior}) %>
                 <%- partial('_partial/post/header-cover', {post: page, sidebarBehavior: sidebarBehavior}) %>
             <% }
-            if (page.title == 'map' || page.title == 'map-embed') { %>
+            if (page.title == 'map') { %>
                 <%- body %>
             <% } else { %>
             <div id="main" data-behavior="<%= sidebarBehavior %>"
@@ -28,7 +28,6 @@
                         <%= (page.coverMeta === 'out' ? 'hasCoverMetaOut' : 'hasCoverMetaIn') %>
                         <%= (page.coverCaption ? 'hasCoverCaption' : '') %>">
                 <%- body %>
-                <%- partial('_partial/footer', null, {cache: !config.relative_link}) %>
             </div>
             <% } %>
             <% if (is_post() && (page.actions === undefined || page.actions)) { %>
