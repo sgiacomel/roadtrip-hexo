@@ -2,6 +2,10 @@
 ---
 title: Cassandra
 date: 2018-04-20 23:02:11
+disqusIdentifier: Cassandra
+comments: true
+actions: false
+no_excerpt_on_index: true
 tags:
 thumbnailImage: http://res.cloudinary.com/sgiacomel/image/upload/a_exif/v1524279656/Cassandra/31.jpg
 ---

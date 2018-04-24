@@ -5,7 +5,7 @@ const cloudinary = require('cloudinary'),
 	cloudinary_config = require( "../cloudinary_config.json" );
 cloudinary.config(cloudinary_config);
 const folder = process.argv[2];
-//const folder = "Darwin";
+
 const images = [];
 const ratios = {};
 const max_pics_to_remove = 5;
@@ -133,11 +133,15 @@ cloudinary.v2.api.resources({folder: folder, max_results: 500, angle: "exif"}, f
 ---\n\
 title: " + folder + "\n\
 date: " + moment().format('YYYY-MM-DD HH:mm:ss') + "\n\
+disqusIdentifier: " + folder + "\n\
+comments: true\n\
+actions: false\n\
+no_excerpt_on_index: true\n\
 tags:\n\
 thumbnailImage: " + images[Math.floor(Math.random() * (images.length - 1))] + "\n\
 ---\n\
-" + folder + ".\n\
-<!-- more -->\n\
+...\n\
+<!-- excerpt -->\n\
 " + output.join('') + "\n\
 ");
   }

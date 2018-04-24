@@ -43,6 +43,7 @@
         <% if (post.actions === undefined || post.actions) { %>
             <%- partial('post/actions', {postContent: postContent}) %>
         <% } %>
+        <%- partial('google-ads') %>
         <% if (post.comments) { %>
             <% if (theme.disqus_shortname) { %>
                 <%- partial('post/disqus') %>
@@ -52,4 +53,3 @@
         <% } %>
     </div>
 </article>
-

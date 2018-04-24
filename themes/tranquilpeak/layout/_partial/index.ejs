@@ -58,14 +58,20 @@
             </div>
             <% if (post.excerpt || post.link) { %>
                 <div class="postShorten-excerpt">
-                    <%- post.excerpt %>
-                    <% if (post.map && _('post.go_to_website')) { %>
+                    <% if (!post.no_excerpt_on_index) { %>
+                        <%- post.excerpt %>
+                    <% } %>
+                    <% if (post.thumbnail == 'map.jpg' && _('post.go_to_map')) { %>
                         <a href="<%- url_for(post.link) %>" class="postShorten-excerpt_link link">
                             <%= __('post.go_to_map') %>
                         </a>
                     <% } else if (post.link && _('post.go_to_website')) { %>
                         <a href="<%- url_for(post.link) %>" class="postShorten-excerpt_link link">
-                            <%= __('post.go_to_website') %>
+                            <% if (!post.no_excerpt_on_index) { %>
+                                <%= __('post.go_to_website') %>
+                            <% } else { %>
+                                <%= __('post.go_to_gallery') %>
+                            <% } %>
                         </a>
                     <% } else if (__('post.read_more')) { %>
                         <a href="<%- url_for(post.path) %>" class="postShorten-excerpt_link link">
@@ -118,4 +124,10 @@
     </article>
     <% }) %>
     <%- partial('pagination', {type: 'page'}) %>
+    <%- partial('google-ads') %>
+    <% if (theme.disqus_shortname) { %>
+        <%- partial('post/disqus') %>
+    <% } else if (theme.gitment.enable) { %>
+        <%- partial('post/gitment') %>
+    <% } %>
 </section>
