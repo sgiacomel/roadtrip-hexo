@@ -86,7 +86,6 @@ thumbnail: map.jpg
 thumbnailImage: map.jpg
 link: map/?dates=${date_param}
 ---
-${title}
 <!-- excerpt -->
 EOM
   done

@@ -667,37 +667,18 @@ function initMap() {
 			  handleEvent(event.feature);
 			}
 		});
-	});
 
-	google.maps.event.addListenerOnce(map, 'idle', function(){
-		zoom_level = map.getZoom();
-		center = map.getCenter();
+		google.maps.event.addListenerOnce(map, 'idle', function(){
+			zoom_level = map.getZoom();
+			center = map.getCenter();
+		});
 
-		//map.data.forEach(function(feature) {
-		    /*$("#segment-list").html( $("#segment-list").html() + 
-		    	"<span>Segment " + feature.getProperty("index") + "</span>" +
-		    	'<input class="check-segment" id="check-segment-' + feature.getProperty("index") + '" type="checkbox" checked="true"><br>' 
-		    );*/
-		    /*var segmentControlDiv = document.createElement('div');
-		    var segmentControl = new SegmentControl(segmentControlDiv, feature, map, segments[feature.getProperty("index")].start, segments[feature.getProperty("index")].start);
-
-		    segmentControlDiv.index = 1;
-		    map.controls[google.maps.ControlPosition.LEFT_CENTER].push(segmentControlDiv);*/
-		//});
-
-		/*$( ".check-segment" ).change(function(event) {
-			var index = this.id.split('-')[this.id.split('-').length - 1];
-			var checked = this.checked;
-			map.data.forEach(function(feature) {
-			    if (feature.getProperty("index") == index) {
-			    	map.data.overrideStyle(feature, {
-					  visible: checked
-					});
-			   		segments[index].markers.start.setVisible(checked);
-			    	segments[index].markers.end.setVisible(checked);
-			    }
-			});
-		});*/
+		google.maps.event.addListenerOnce(map, 'tilesloaded', function () { 
+	    	var start = segments[0]['start'];
+	    	var end = segments[Object.keys(segments).length - 1]['end'];
+	    	var text = start + (start == end ? '' : (" to " + end));
+	    	$("#container-fluid").append($("<span>", {id: "map-loaded", text: text})); 
+	    });
 	});
 
 	// Create the DIV to hold the control and call the CenterControl()
@@ -709,16 +690,6 @@ function initMap() {
     if (!embed) {
     	map.controls[google.maps.ControlPosition.TOP_CENTER].push(centerControlDiv);
     }
-
-    map.addListener('tilesloaded', function () { 
-    	var start = segments[0]['start'];
-    	var end = segments[Object.keys(segments).length - 1]['end'];
-    	var text = start + (start == end ? '' : (" to " + end));
-    	$("#container-fluid").append($("<span>", {id: "map-loaded", text: text})); 
-
-    	zoom_level = map.getZoom();
-		center = map.getCenter();
-    });
 }
 
 </script>
