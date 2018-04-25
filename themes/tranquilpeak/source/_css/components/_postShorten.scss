@@ -108,7 +108,6 @@
     }
 }
 
-// Hide the post's thumbnail image on very small screen and down
 @media #{$xsmall-and-down} {
     .postShorten-group {
         width: 100%;
@@ -122,19 +121,11 @@
         border: 1px solid #aaa;
     }
 
-    .postShorten {
-        .postShorten-thumbnailimg {
-            display: none;
-
-            img {
-                display: none;
-            }
-        }
-    }
+    $post-thumbnail-image-width: 150px !global;
+    $post-thumbnail-image-height: 105px !global;
 }
 
-// Display the post's thumbnail image on small screen and up
-@media #{$small-and-up} {
+//@media #{$small-and-up} {
     .postShorten.postShorten--thumbnailimg-right {
         .postShorten-thumbnailimg {
             float:  right;
@@ -203,4 +194,4 @@
             }
         }
     }
-}
+//}
