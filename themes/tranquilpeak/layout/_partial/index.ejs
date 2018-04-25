@@ -125,13 +125,16 @@
     </article>
     <% }) %>
     <%- partial('pagination', {type: 'page'}) %>
-    <%- partial('google-ads') %>
     <% if (theme.disqus_shortname) { %>
         <%- partial('post/disqus') %>
     <% } else if (theme.gitment.enable) { %>
         <%- partial('post/gitment') %>
     <% } %>
     </section>
-    <section class="sideBarMap">TEST TEST TEST
+    <section class="sideBarMap">
+        <a class="link-unstyled" href="/map/">
+            <center>Full map</center>
+            <image class="iframeMap" src="/map-all.jpg"></a>
+        <%- partial('google-ads') %>
     </section>
 </section>
