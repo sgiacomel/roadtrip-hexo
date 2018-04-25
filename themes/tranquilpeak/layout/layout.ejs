@@ -36,6 +36,7 @@
                 </div>
                 <%- partial('_partial/post/share-options', {post: page, sidebarBehavior: sidebarBehavior}) %>
             <% } %>
+            <%- partial('_partial/footer', {post: page}) %>
         </div>
         <%- partial('_partial/about', null, {cache: !config.relative_link}) %>
         <% if (config.algolia) { %>
