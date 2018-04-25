@@ -1,22 +1,43 @@
 // Group of `.postShorten`
 // Add margin and border bottom when `.postShorten` are in `.postShorten-group`
 .postShorten-group {
-    width: 65%;
-    float: left;
-    padding: 8px;
-    padding-top: 0;
-    margin: 0;
-    marrgin-right: 2px;
-    margin-top: 5px;
-    margin-bottom: 5px;
-    border: 1px solid #aaa;
     background-color: #efe;
-    border-radius: 8px;
+    width: 70%;
+    float: left;
     .postShorten {
         // Space between 2 shorten post
         margin-top:    8px;
         border-bottom: 2px solid #aaa;
     }
+}
+
+.innerPostShorten-group {
+    padding: 8px;
+    padding-top: 0;
+    margin: 0;
+    border: 1px solid #aaa;
+}
+
+.sideBarMap {
+    background-color: #eef;
+    width: 30%;
+    float: right;
+    height: 100%;
+}
+
+.innerSideBarMap {
+    padding: 8px;
+    padding-top: 0;
+    margin: 0;
+    border-width: 1px 1px 1px 0px;
+    border-style: solid;
+    border-color: #aaa;
+}
+
+.iframeMap {
+    width: 100%;
+    margin-bottom: 15px;
+    border: 1px solid #aaa;
 }
 
 // Post
@@ -89,6 +110,18 @@
 
 // Hide the post's thumbnail image on very small screen and down
 @media #{$xsmall-and-down} {
+    .postShorten-group {
+        width: 100%;
+    }
+
+    .sideBarMap {
+        width: 100%;
+    }
+
+    .innerSideBarMap {
+        border: 1px solid #aaa;
+    }
+
     .postShorten {
         .postShorten-thumbnailimg {
             display: none;
@@ -170,23 +203,4 @@
             }
         }
     }
-}
-
-.sideBarMap {
-    background-color: #eef;
-    width: 23%;
-    float: left;
-    padding: 8px;
-    border-radius: 8px;
-    margin: 0;
-    margin-top: 5px;
-    margin-bottom: 5px;
-    border: 1px solid #aaa;
-    height: 100%;
-}
-
-.iframeMap {
-    width: 100%;
-    margin-bottom: 15px;
-    border: 1px solid #aaa;
 }

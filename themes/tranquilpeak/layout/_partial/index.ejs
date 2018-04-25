@@ -1,5 +1,6 @@
 <section class="main-content-wrap">
     <section class="postShorten-group">
+    <div class="innerPostShorten-group">
     <% page.posts.each(function(post) { %>
     <%
         var tableOfContents = null;
@@ -130,12 +131,14 @@
     <% } else if (theme.gitment.enable) { %>
         <%- partial('post/gitment') %>
     <% } %>
+    </div>
     </section>
     <section class="sideBarMap">
-        <a class="link-unstyled" href="/map/">
+        <div class="innerSideBarMap"><a class="link-unstyled" href="/map/">
             <center>Full map</center>
             <image class="iframeMap" src="/map-all.jpg">
         </a>
         <%- partial('google-ads') %>
+        </div>
     </section>
 </section>
