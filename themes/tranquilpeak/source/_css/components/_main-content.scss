@@ -4,7 +4,11 @@
     margin:        0 auto;
     padding-right: map-get($main-content, padding-right-left);
     padding-left:  map-get($main-content, padding-right-left);
-    border: 	   1px solid #aaa;
+ }
+
+section.main-content-wrap {
+	border: 	   1px solid #aaa;
+	padding-left:  0px;
     overflow:	   auto;
     background-color: #ddddee;
 }

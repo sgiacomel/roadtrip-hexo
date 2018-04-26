@@ -21,6 +21,7 @@
                                .replace(/<!-- ?content ?-->/g, '<div class="main-content-wrap">');
 %>
 <article class="post">
+    <section class="main-content-wrap">
     <% if (post.coverCaption) { %>
         <span class="post-header-cover-caption caption"><%= post.coverCaption %></span>
     <% } %>
@@ -33,6 +34,7 @@
             <%- partial('post/gallery') %>
         </div>
     </div>
+    </section>
     <div id="post-footer" class="post-footer main-content-wrap">
         <% if ((post.tags) && (post.tags.length > 0)) { %>
             <div class="post-footer-tags">
