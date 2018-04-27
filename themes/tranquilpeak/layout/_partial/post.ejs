@@ -46,6 +46,7 @@
             <%- partial('post/actions', {postContent: postContent}) %>
         <% } %>
         <%- partial('google-ads') %>
+        <%- partial('post/medianet-ads') %>
         <% if (post.comments) { %>
             <% if (theme.disqus_shortname) { %>
                 <%- partial('post/disqus') %>

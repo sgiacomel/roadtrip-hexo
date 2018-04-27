@@ -141,8 +141,7 @@ tags:\n\
 thumbnailImage: " + images[Math.floor(Math.random() * (images.length - 1))] + "\n\
 ---\n\
 ...\n\
-<!-- excerpt -->\n\
-" + output.join('') + "\n\
+<!-- excerpt -->" + output.join('') + "\n\
 ");
   }
 );
