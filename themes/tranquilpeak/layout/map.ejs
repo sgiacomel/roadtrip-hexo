@@ -1,7 +1,13 @@
 <div id="container-fluid">
-	<div id="map"></div>
+  <div id="map"></div>
+  <div id="legend">
+    <ul>
+      <li>To view the details for a segment, click on the line or on the markers</li>
+    </ul>
+  </div>
 </div>
 <%- js('assets/js/jquery.js') %>
+<%- js('assets/js/oms.min.js') %>
 <script>
 
 var url_string = window.location.href;
@@ -253,6 +259,8 @@ for(var key in colors) {
     colorsArr.push(key);
 }
 
+var oms;
+
 function addMarker(map, location, index, point) {
 	//var components = current_color.match(/\d+/g);
 	//var current_hex_color = rgbToHex(parseInt(components[0]), parseInt(components[1]), parseInt(components[2]));
@@ -268,15 +276,16 @@ function addMarker(map, location, index, point) {
 	  labelOrigin: new google.maps.Point(15, 40),
 	  size: small_size,
 	  scaledSize: small_size,
-	  zIndex: point == 'end' ? marker_index * 5 : 1
+	  zIndex: point == 'start' ? 500 - marker_index : 1
 	};
 	var marker = new google.maps.Marker({
       position: location,
-      map: map,
+      //map: map,
       icon: image,
-	  zIndex: point == 'end' ? marker_index * 5 : 1
+	  zIndex: point == 'start' ? 500 - marker_index : 1
     });
-    marker.addListener('click', function(event) {
+    oms.addMarker(marker);
+    marker.addListener('spider_click', function(event) {
 	    handleEvent(null, index);
 	});
     segments[index]["markers"] = segments[index]["markers"] || {};
@@ -362,6 +371,9 @@ function generateSegment(feature, coordinates, line, point) {
 			infowindows[index] = new google.maps.InfoWindow({
 		  		position: midPoint
 	  		});
+	  		google.maps.event.addListener(infowindows[index], 'closeclick', function() {
+		      resetMapView(true);
+		    });
 		}
 		
 		var latLng = new google.maps.LatLng(parseFloat(mark_lat), parseFloat(mark_lng));
@@ -394,9 +406,11 @@ function getTimeDifference(date_start, date_end) {
 
 var map, center, zoom_level;
 
-function resetMapView() {
-	map.setZoom(zoom_level);
-	map.setCenter(center);
+function resetMapView(noResetZoom) {
+	if(!noResetZoom) {
+		map.setZoom(zoom_level);
+		map.setCenter(center);
+	}
 	resetLines();
 	resetInfoWindows();
 	resetMarkers();
@@ -414,21 +428,22 @@ function resetMarkers(index_feature) {
 		  		fontFamily: "Montserrat, Georgia, Times, serif",
 		  		color: "black"
 			});
+			var zIndex = 1000;
 			var end_icon = segments[index_infowindow].markers.end.getIcon();
 			end_icon.size = big_size;
 			end_icon.scaledSize = big_size;
-			end_icon.zIndex = 1000;
+			end_icon.zIndex = zIndex;
 			end_icon.url = 'https://raw.githubusercontent.com/Concept211/Google-Maps-Markers/master/images/marker_red' + marker_index + '.png';
 			segments[index_infowindow].markers.end.setIcon(end_icon);
-			segments[index_infowindow].markers.end.setZIndex(1000);
+			segments[index_infowindow].markers.end.setZIndex(zIndex);
 			
 			var start_icon = segments[index_infowindow].markers.start.getIcon();
 			start_icon.size = big_size;
 			start_icon.scaledSize = big_size;
-			start_icon.zIndex = 1000;
+			start_icon.zIndex = zIndex;
 			start_icon.url = 'https://raw.githubusercontent.com/Concept211/Google-Maps-Markers/master/images/marker_red' + (marker_index - 1) + '.png';
 			segments[index_infowindow].markers.start.setIcon(start_icon);
-			segments[index_infowindow].markers.start.setZIndex(1000);
+			segments[index_infowindow].markers.start.setZIndex(zIndex);
 
 			segments[index_infowindow].markers.end.setLabel({
 				text: segments[index_infowindow].end,
@@ -442,21 +457,23 @@ function resetMarkers(index_feature) {
 			segments[index_infowindow].markers.start.setLabel(null);
 			segments[index_infowindow].markers.end.setLabel(null);
 
+			var zIndex = 100 - marker_index;
 			var end_icon = segments[index_infowindow].markers.end.getIcon();
 			end_icon.size = small_size;
 			end_icon.scaledSize = small_size;
-			end_icon.zIndex = 5;
+			end_icon.zIndex = zIndex;
 			end_icon.url = 'https://raw.githubusercontent.com/Concept211/Google-Maps-Markers/master/images/marker_orange' + marker_index + '.png';
 			segments[index_infowindow].markers.end.setIcon(end_icon);
-			segments[index_infowindow].markers.end.setZIndex(5);
+			segments[index_infowindow].markers.end.setZIndex(zIndex);
 			
+			zIndex = 500 - marker_index;
 			var start_icon = segments[index_infowindow].markers.start.getIcon();
 			start_icon.size = small_size;
 			start_icon.scaledSize = small_size;
-			start_icon.zIndex = 1;
+			start_icon.zIndex = zIndex;
 			start_icon.url = 'https://raw.githubusercontent.com/Concept211/Google-Maps-Markers/master/images/marker_orange' + (marker_index - 1) + '.png';
 			segments[index_infowindow].markers.start.setIcon(start_icon);
-			segments[index_infowindow].markers.start.setZIndex(1);
+			segments[index_infowindow].markers.start.setZIndex(zIndex);
 		}
 	}
 	return open_infowindow_index;
@@ -542,7 +559,7 @@ function CenterControl(controlDiv, map) {
 	controlText.style.lineHeight = '38px';
 	controlText.style.paddingLeft = '5px';
 	controlText.style.paddingRight = '5px';
-	controlText.innerHTML = 'Center Map';
+	controlText.innerHTML = 'Reset Map';
 	controlUI.appendChild(controlText);
 
 	// Setup the click event listeners
@@ -587,7 +604,7 @@ function SegmentControl(controlDiv, feature, map, start, end) {
 function initMap() {
 	
 	const map_options = {
-		disableDefaultUI: true
+		disableDefaultUI: embed
 	};
 
 	if (dates.length == 0) {
@@ -626,6 +643,12 @@ function initMap() {
 		"type": "FeatureCollection",
 		"features": []
 	};
+
+	oms = new OverlappingMarkerSpiderfier(map, {
+	  markersWontMove: true,
+	  markersWontHide: true,
+	  basicFormatEvents: true
+	});
 
 	loadJSON("/locations.json", function(locations_response) {
 		locations = JSON.parse(locations_response);
