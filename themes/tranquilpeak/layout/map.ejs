@@ -310,7 +310,7 @@ function generateSegment(feature, coordinates, line, point) {
 	        	callback(null, locality_mark);
 	        }
 	        else {
-	        	loadJSON("https://maps.googleapis.com/maps/api/geocode/json?latlng=" +input + "&key=AIzaSyCMETxi9mRjWMt726OBZAAhRyXj1xyuPOs", function(response) {
+	        	loadJSON("https://maps.googleapis.com/maps/api/geocode/json?latlng=" +input + "&key=AIzaSyA3rZhYnhq34NmOQOPbI5NOueLf0HKM7BE", function(response) {
 					locality_mark = getLocality(response);
 					//console.log('got ' + locality_mark);
 					callback(null, locality_mark);
