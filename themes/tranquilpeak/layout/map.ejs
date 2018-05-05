@@ -7,8 +7,10 @@
   </div>
 </div>
 <%- js('assets/js/jquery.js') %>
+<% google_api_key = (config.url.indexOf('localhost' >= 0) ? config.google_api_key.localhost : config.google_api_key.production) %>
 <script>
 
+var google_api_key = '<%= google_api_key %>';
 var url_string = window.location.href;
 var url = new URL(url_string);
 var dates = [], raw_dates = [];
@@ -310,9 +312,8 @@ function generateSegment(feature, coordinates, line, point) {
 	        	callback(null, locality_mark);
 	        }
 	        else {
-	        	loadJSON("https://maps.googleapis.com/maps/api/geocode/json?latlng=" +input + "&key=AIzaSyA3rZhYnhq34NmOQOPbI5NOueLf0HKM7BE", function(response) {
+	        	loadJSON("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + input + "&key=" + google_api_key, function(response) {
 					locality_mark = getLocality(response);
-					//console.log('got ' + locality_mark);
 					callback(null, locality_mark);
 				});
 	        }
@@ -757,4 +758,4 @@ function initMap() {
 }
 
 </script>
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCMETxi9mRjWMt726OBZAAhRyXj1xyuPOs&callback=initMap"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=<%= google_api_key %>&callback=initMap"></script>
