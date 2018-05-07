@@ -88,7 +88,6 @@ create_posts() {
 title: ${title}
 date: ${date_post} 00:00:00
 tags:
-thumbnail: map.jpg
 thumbnailImage: map.jpg
 link: map/?dates=${date_param}
 ---

@@ -16,7 +16,7 @@ function simple_pictures_loop(pictures, fig, no_break) {
     	const picture = pictures[index];
     	let classes = "left";
     	if (index == pictures.length - 1 && !no_break) {
-    		classes += " break"
+    		classes += " clear"
     	}
     	result += "{% image fancybox fig-" + fig + " " + classes + " nocaption group:" + folder.toLowerCase() + " " + picture + " %}";
     }
@@ -36,7 +36,7 @@ function print_pictures(pictures, option) {
 	let align_big = "left";
 	let no_break = false;
 	if (Math.random() < 0.5) {
-		align_big = "right break";
+		align_big = "right clear";
 		no_break = true;
 	}
 	switch(option) {

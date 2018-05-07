@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-## Usage: SCRIPT -u -r
-##     Disable the given account as Sensibill Admin
+set -e
+
+## Usage: Create gallery
 ##     -f   Folder
 ##     -u   Upload
 ##     -r   Resize
@@ -18,7 +19,7 @@ resize=""
 folder=""
 gallery=""
 
-while getopts ":h:gurf:" opt; do
+while getopts ":hgurf:" opt; do
   case "$opt" in
     h)
       show_help
