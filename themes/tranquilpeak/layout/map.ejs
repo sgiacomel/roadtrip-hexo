@@ -34,6 +34,7 @@ if (url.searchParams.get("embed") !== null) {
 	embed = true;
 	$( "#header" ).hide();
 	$( "#container-fluid" ).css({ top: '0px', height: '100%' });
+	$( "#legend" ).hide();
 }
 dates.sort();
 //var date = url.searchParams.get("date") ? new Date(Date.parse(url.searchParams.get("date"))) : new Date();
