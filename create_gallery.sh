@@ -54,4 +54,5 @@ if [[ ! -z ${gallery} ]]; then
 	hexo new post ${folder}
 fi
 text=$(node create_gallery.js ${folder})
-echo "${text}" > source/_posts/${folder}.md
+echo $text
+#echo "${text}" > source/_posts/${folder}.md
