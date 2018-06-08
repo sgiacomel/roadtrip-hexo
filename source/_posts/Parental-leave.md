@@ -1,6 +1,6 @@
 ---
 title: Parental leave
-date: 2018-05-06 07:28:02
+date: 2018-05-20 07:00:00
 thumbnailImage: http://res.cloudinary.com/sgiacomel/image/upload/a_exif/v1525647665/Parental/1.jpg
 tags:
 ---
@@ -40,4 +40,4 @@ So when you are planning your leave, keep this in mind: you can take more time o
 
 We also need to consider that parental leave for fathers is not as common yet as it should be, some dads and some companies don't even know they have this option. I am lucky because I work in a company that highly values family time.
 
-Which is more important then, your career or time with your family? 
+How often do you get to spend time with your family?

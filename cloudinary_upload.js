@@ -7,11 +7,13 @@ const cloudinary_config = require( "../cloudinary_config.json" );
 cloudinary.config(cloudinary_config);
 
 const folder = process.argv[2];
+const resize = process.argv[3];
+
 if (!folder) {
 	console.log("No folder!");
 	process.exit();
 }
-const dir = '/home/simone/Pictures/' + folder + '/resized/';
+const dir = '/home/simone/Pictures/' + folder + (resize ? '/resized/' : '/');
 
 fs.readdir(dir, function(err, files) {
 	if (err) {
