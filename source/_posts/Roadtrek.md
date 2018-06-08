@@ -1,4 +1,3 @@
-
 ---
 title: Roadtrek
 date: 2018-06-07 21:13:27
@@ -6,7 +5,7 @@ disqusIdentifier: Roadtrek
 comments: true
 actions: false
 no_excerpt_on_index: true
-tags:
+tags: Roadtrek
 thumbnailImage: http://res.cloudinary.com/sgiacomel/image/upload/a_exif/v1528420351/Roadtrek/4.jpg
 ---
 ...
