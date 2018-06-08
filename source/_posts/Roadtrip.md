@@ -3,8 +3,6 @@ title: Roadtrip
 date: 2018-06-07 12:00:00
 disqusIdentifier: Roadtrip
 comments: true
-actions: false
-no_excerpt_on_index: true
 tags: Roadtrip
 thumbnailImage: http://res.cloudinary.com/sgiacomel/image/upload/a_exif/v1528420373/Roadtrek/8.jpg
 ---

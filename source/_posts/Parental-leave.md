@@ -2,7 +2,9 @@
 title: Parental leave
 date: 2018-05-20 07:00:00
 thumbnailImage: http://res.cloudinary.com/sgiacomel/image/upload/a_exif/v1525647665/Parental/1.jpg
-tags:
+disqusIdentifier: Parental-leave
+comments: true
+tags: Parental-leave
 ---
 When my wife and I were planning on having our first kid...
 <!-- excerpt -->When my wife and I were planning on having our first kid, one of the first thoughts that crossed my mind was: time off.
