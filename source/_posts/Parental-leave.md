@@ -35,7 +35,7 @@ The government doesn't need to know in advance who and when will claim the benef
 
 {% image fancybox fig-33 right nocaption group:parental http://res.cloudinary.com/sgiacomel/image/upload/a_exif/v1525647662/Parental/0.jpg %}
 
-Our plan is pretty simple: Niki would claim the first 4 months or so (15 weeks of maternity leave and a couple of weeks for parental leave), then we would be off together and have the option to switch who can claim. Niki's benefit is below the threshold so it would make more sense for me to claim it when I'm off. 
+Our plan is pretty simple: Niki would claim the first 4 months or so (15 weeks of maternity leave and a couple of weeks for parental leave), then we would be off together and have the option to switch who can claim.
 So we will claim benefits together but Niki will have to stop earlier so that I can keep claiming up to the end of my leave and still remain within the 35 weeks. 
 
 So when you are planning your leave, keep this in mind: you can take more time off than just what the EI benifts are covering. If we max all the leaves under the standard option for both parents, we would have: 17 week maternity leave  plus 35 week of parental leave for the mother and 37 weeks of parental leave for the father. The sum is 89 weeks divided between the 2 parents. Again, you can claim EI benefits only for 50 of these weeks, whenever is better for you within the limits and restrictions.
