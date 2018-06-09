@@ -56,7 +56,7 @@ download_missing_files() {
   done
 }
 
-#new_files+=("20180421.geojson")
+new_files+=("20180608.geojson")
 
 cache_results() {
   for file in ${new_files[@]}; do
@@ -110,16 +110,16 @@ create_alldates() {
     done
     alldates_json="${alldates_json}"']}'
     echo "${alldates_json}"
-    echo "${alldates_json}" > themes/sgiacomel/layout/_map/alldates.ejs
+    echo "${alldates_json}" > themes/tranquilpeak/layout/_map/alldates.ejs
   fi
 }
 
 #folder_id=$(get_folder_id)
 folder_id=1yhjEL1CPHBKKoVRc12B2Zksk8BKxEhsB
-read_local_files
-get_gdrive_files ${folder_id}
-download_missing_files
-#new_files=() && new_files+=("20180330.geojson")
+#read_local_files
+#get_gdrive_files ${folder_id}
+#download_missing_files
+#new_files=() && new_files+=("20180608.geojson")
 cache_results
 create_maps
 create_posts
