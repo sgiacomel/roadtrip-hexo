@@ -1,30 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
-    <meta name="description" content="Road trip across Canada.">
-    <meta name="author" content="Simone Giacomel">
-    
-    <title>A road trip across Canada</title>
-    <style>
-      html, body, #map-canvas {
-        height: 100%;
-        margin: 0px;
-        padding: 0px
-      }
-      #panel {
-        position: absolute;
-        top: 5px;
-        left: 50%;
-        margin-left: -180px;
-        z-index: 5;
-        background-color: #fff;
-        padding: 10px;
-        border: 1px solid #999;
-      }
-    </style>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCMETxi9mRjWMt726OBZAAhRyXj1xyuPOs&v=3.exp"></script>
+<div id="container-fluid">
+  <div id="map" style="float:left;width:80%;"></div>
+  <div id="directions-canvas" style="float:right;width:20%; font-size: 10px; line-height: 10px;"></div>
+</div>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCMETxi9mRjWMt726OBZAAhRyXj1xyuPOs&v=3.exp"></script>
     <script>
 		var segments = [
 			[
@@ -58,19 +36,19 @@
 		var totalDuration = 0;
 
 		function initialize() {
-		  var center = new google.maps.LatLng(50, -93);
+		  var center = new google.maps.LatLng(50, -75);
 		  var mapOptions = {
 			zoom: 4,
 			center: center
 		  };
-		  map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+		  map = new google.maps.Map(document.getElementById('map'), mapOptions);
 		  for (var i = 0; i < directionsDisplay.length; i++) {
 			directionsDisplay[i].setMap(map);
 		  }
 		  //directionsPanel.setPanel(document.getElementById('directions-canvas'));
-		  /*google.maps.event.addListenerOnce(map, 'tilesloaded', function () { 
+		  google.maps.event.addListenerOnce(map, 'tilesloaded', function () { 
 			$("#directions-canvas").append($("<span>", {id: "map-loaded", text: ""})); 
-		  });*/
+		  });
 		}
 
 		function calcRoute(index) {
@@ -143,9 +121,3 @@
 	    //calcRoute(2);
 		
     </script>
-  </head>
-  <body>
-    <div id="map-canvas" style="float:left;width:80%; height:100%"></div>
-    <div id="directions-canvas" style="float:right;width:20%;height 100%"></div>
-  </body>
-</html>
