@@ -56,7 +56,7 @@ download_missing_files() {
   done
 }
 
-new_files+=("20180611.geojson")
+new_files+=("20180612.geojson")
 
 cache_results() {
   for file in ${new_files[@]}; do
