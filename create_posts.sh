@@ -56,7 +56,7 @@ download_missing_files() {
   done
 }
 
-new_files+=("20180612.geojson")
+new_files+=("20180613.geojson")
 
 cache_results() {
   for file in ${new_files[@]}; do
@@ -123,4 +123,4 @@ folder_id=1yhjEL1CPHBKKoVRc12B2Zksk8BKxEhsB
 cache_results
 create_maps
 create_posts
-create_alldates
+#create_alldates
