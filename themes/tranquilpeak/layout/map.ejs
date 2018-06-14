@@ -648,7 +648,8 @@ function initMap() {
 	oms = new OverlappingMarkerSpiderfier(map, {
 	  markersWontMove: true,
 	  markersWontHide: true,
-	  basicFormatEvents: true
+	  basicFormatEvents: true,
+	  keepSpiderfied: true
 	});
 
 	loadJSON("/locations.json", function(locations_response) {
