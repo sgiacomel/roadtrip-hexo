@@ -16,5 +16,6 @@ else {
   await page.waitForSelector('#map-loaded');
   const text = await page.evaluate(el => el.innerHTML, await page.$('#map-loaded'));
   await page.screenshot({path: name + '.jpg'});
+  console.log(text);
   await browser.close();
 })();

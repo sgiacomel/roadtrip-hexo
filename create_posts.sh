@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+set -x
 pid_hexo_server=""
 
 start_hexo_server() {
@@ -56,7 +56,7 @@ download_missing_files() {
   done
 }
 
-new_files+=("20180613.geojson")
+new_files+=("20180615.geojson")
 
 cache_results() {
   for file in ${new_files[@]}; do

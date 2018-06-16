@@ -18,6 +18,7 @@ upload=""
 resize=""
 folder=""
 gallery=""
+title=""
 
 while getopts ":hgurf:" opt; do
   case "$opt" in
@@ -37,12 +38,19 @@ while getopts ":hgurf:" opt; do
     g)
       gallery=1
       ;;
+    t)
+      title=$OPTARG
+      ;;
     '?')
       show_help >&2
       exit 1
       ;;
   esac
 done
+
+if [[ -z ${title} ]]; then
+  title="${gallery}"
+fi
 
 if [[ ! -z ${resize} ]]; then
 	./resizer.sh -f ~/Pictures/${folder} -d ~/Pictures/${folder}/resized -s 800
@@ -55,4 +63,6 @@ if [[ ! -z ${gallery} ]]; then
 fi
 text=$(node create_gallery.js ${folder})
 echo $text
-#echo "${text}" > source/_posts/${folder}.md
+if [[ ! -z ${gallery} ]]; then
+  echo "${text}" > source/_posts/${title}.md
+fi
