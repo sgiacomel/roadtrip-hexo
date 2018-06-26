@@ -11,7 +11,7 @@ else {
 (async () => {
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
-  page.setDefaultNavigationTimeout(60000);
+  page.setDefaultNavigationTimeout(120000);
   await page.goto('http://localhost:4000/map/?embed=true' + params);
   await page.waitForSelector('#map-loaded');
   const text = await page.evaluate(el => el.innerHTML, await page.$('#map-loaded'));
