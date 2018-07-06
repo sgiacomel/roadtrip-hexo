@@ -36,8 +36,9 @@ function print_pictures(pictures, option) {
 	let align_big = "left";
 	let no_break = false;
 	if (Math.random() < 0.5) {
-		align_big = "right clear";
-		no_break = true;
+		//align_big = "right clear";
+		//no_break = true;
+		align_big = "right";
 	}
 	switch(option) {
 	    case 1:
