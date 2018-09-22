@@ -10,7 +10,7 @@ let db = require(location_file);
 function getLocality(response) {
 	var json_response = JSON.parse(response);
 	var locality = "";
-	search_for = ["locality", "administrative_area_level_3"];
+	search_for = ["locality", "administrative_area_level_3", "administrative_area_level_2"];
 	if (json_response.results && json_response.results[0]) {
 		for (var index_address in json_response.results[0].address_components) {
 			if(json_response.results[0].address_components[index_address].types.some(function (v) { return search_for.indexOf(v) >= 0;
